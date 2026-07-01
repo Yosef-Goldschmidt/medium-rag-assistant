@@ -1,0 +1,20 @@
+# Secrets — never commit
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Dataset — 52 MB, downloaded separately, queried via Pinecone (not needed in repo/deploy)
+*.csv
+
+# Assignment brief — course material, not part of the project
+Individual Assignment.pdf
+
+# IDE / local tooling
+.idea/
+.claude/
+
+# Vercel
+.vercel/

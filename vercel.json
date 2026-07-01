@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/prompt.py": {
+      "maxDuration": 60,
+      "includeFiles": "src/**"
+    },
+    "api/stats.py": {
+      "includeFiles": "src/**"
+    }
+  }
+}
