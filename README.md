@@ -2,8 +2,10 @@
 
 A Retrieval-Augmented Generation (RAG) system that answers questions **only** from a corpus of ~7,600 English Medium articles. It retrieves relevant passages from a vector database and has an LLM answer strictly from that retrieved context — never from the model's own background knowledge.
 
-**Live URL:** `<LIVE_URL>`
-**Repository:** `<GITHUB_URL>`
+**Live URL:** https://medium-rag-assistant-phi.vercel.app
+**Repository:** https://github.com/Yosef-Goldschmidt/medium-rag-assistant
+
+Endpoints: `GET /api/stats` · `POST /api/prompt`
 
 ---
 
