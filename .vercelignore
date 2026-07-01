@@ -1,0 +1,5 @@
+# Keep the newer pyproject-based Python builder from triggering.
+# Vercel installs dependencies from requirements.txt and serves each api/*.py
+# as its own serverless function (the classic Python model we want).
+pyproject.toml
+uv.lock
