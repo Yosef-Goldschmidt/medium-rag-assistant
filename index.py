@@ -33,15 +33,20 @@ HTML_PAGE = """<!DOCTYPE html>
   .chip:hover { border-color: var(--accent); }
   textarea { width: 100%; min-height: 70px; padding: 12px; border: 1px solid var(--line);
              border-radius: 8px; font: inherit; resize: vertical; }
-  button { margin-top: 10px; background: var(--accent); color: #fff; border: 0;
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+  button { background: var(--accent); color: #fff; border: 0;
            padding: 10px 18px; border-radius: 8px; font: inherit; cursor: pointer; }
+  button.secondary { background: #fff; color: #333; border: 1px solid var(--line); }
   button:disabled { opacity: .5; cursor: default; }
   #answer { white-space: pre-wrap; margin-top: 24px; padding: 16px; border: 1px solid var(--line);
             border-radius: 8px; background: #fafafa; min-height: 20px; }
+  #stats { margin-top: 12px; color: var(--muted); font-size: .9rem; }
   details { margin-top: 16px; }
   summary { cursor: pointer; color: var(--muted); }
   .chunk { border-top: 1px solid var(--line); padding: 10px 0; font-size: .88rem; }
   .chunk .meta { color: var(--muted); font-size: .8rem; margin-bottom: 4px; }
+  pre { white-space: pre-wrap; background:#fafafa; border:1px solid var(--line);
+        border-radius:6px; padding:12px; font-size:.82rem; overflow-x:auto; }
   .spin { color: var(--muted); }
 </style>
 </head>
@@ -51,12 +56,23 @@ HTML_PAGE = """<!DOCTYPE html>
 
   <div class="examples" id="examples"></div>
   <textarea id="q" placeholder="Ask a question about the Medium articles..."></textarea>
-  <br><button id="ask">Ask</button>
+  <div class="row">
+    <button id="ask">Ask</button>
+    <button id="statsBtn" class="secondary">Show config (/api/stats)</button>
+  </div>
+  <div id="stats"></div>
 
   <div id="answer"></div>
+
   <details id="ctxWrap" style="display:none">
     <summary>Retrieved context</summary>
     <div id="context"></div>
+  </details>
+
+  <details id="promptWrap" style="display:none">
+    <summary>Augmented prompt (sent to the model)</summary>
+    <h4>System</h4><pre id="sysPrompt"></pre>
+    <h4>User</h4><pre id="userPrompt"></pre>
   </details>
 
 <script>
@@ -74,9 +90,12 @@ EXAMPLES.forEach(text => {
 });
 
 const askBtn = document.getElementById("ask");
+const statsBtn = document.getElementById("statsBtn");
 const answerEl = document.getElementById("answer");
+const statsEl = document.getElementById("stats");
 const ctxWrap = document.getElementById("ctxWrap");
 const contextEl = document.getElementById("context");
+const promptWrap = document.getElementById("promptWrap");
 
 async function ask() {
   const question = document.getElementById("q").value.trim();
@@ -84,6 +103,7 @@ async function ask() {
   askBtn.disabled = true;
   answerEl.innerHTML = '<span class="spin">Thinking… (this can take 10–30s)</span>';
   ctxWrap.style.display = "none";
+  promptWrap.style.display = "none";
   contextEl.innerHTML = "";
   try {
     const res = await fetch("/api/prompt", {
@@ -94,6 +114,7 @@ async function ask() {
     const data = await res.json();
     if (data.error) { answerEl.textContent = "Error: " + data.error; return; }
     answerEl.textContent = data.response || "(no response)";
+
     if (Array.isArray(data.context) && data.context.length) {
       data.context.forEach(c => {
         const d = document.createElement("div");
@@ -106,13 +127,36 @@ async function ask() {
       });
       ctxWrap.style.display = "block";
     }
+
+    if (data.Augmented_prompt) {
+      document.getElementById("sysPrompt").textContent = data.Augmented_prompt.System || "";
+      document.getElementById("userPrompt").textContent = data.Augmented_prompt.User || "";
+      promptWrap.style.display = "block";
+    }
   } catch (e) {
     answerEl.textContent = "Request failed: " + e;
   } finally {
     askBtn.disabled = false;
   }
 }
+
+async function showStats() {
+  statsBtn.disabled = true;
+  statsEl.textContent = "Loading…";
+  try {
+    const res = await fetch("/api/stats");
+    const data = await res.json();
+    statsEl.textContent = "Config → chunk_size: " + data.chunk_size +
+      "  ·  overlap_ratio: " + data.overlap_ratio + "  ·  top_k: " + data.top_k;
+  } catch (e) {
+    statsEl.textContent = "Failed to load config: " + e;
+  } finally {
+    statsBtn.disabled = false;
+  }
+}
+
 askBtn.onclick = ask;
+statsBtn.onclick = showStats;
 </script>
 </body>
 </html>"""
